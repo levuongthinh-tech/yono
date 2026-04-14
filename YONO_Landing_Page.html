@@ -1,0 +1,692 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>YONO — You Only Need One</title>
+<!-- ═══════════════════════════════════════════════════════════════
+     SUPABASE SETUP — Thay 2 dòng bên dưới bằng key của bạn
+     Lấy tại: https://supabase.com → Project Settings → API
+     ═══════════════════════════════════════════════════════════════ -->
+<script>
+  const SUPABASE_URL  = 'https://bkdpdirckxiweabemiun.supabase.co';
+  const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJrZHBkaXJja3hpd2VhYmVtaXVuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYxNDg4NTAsImV4cCI6MjA5MTcyNDg1MH0.xsrkjF_HzkL9WQhfRW5u49tMo7OIRiN4mIW1huBf3QM';
+</script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+  :root {
+    --navy:   #1a2f4e;
+    --navy2:  #243b55;
+    --green:  #27ae60;
+    --green2: #1e8449;
+    --orange: #e67e22;
+    --light:  #f0f4f8;
+    --white:  #ffffff;
+    --gray:   #6b7c93;
+    --dark:   #1a1a2e;
+    --gold:   #f39c12;
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  html { scroll-behavior:smooth; }
+  body { font-family:'Segoe UI',system-ui,-apple-system,sans-serif; color:#1a1a2e; background:#fff; overflow-x:hidden; }
+
+  /* ── NAV ── */
+  nav {
+    position:fixed; top:0; width:100%; z-index:100;
+    padding:16px 40px; display:flex; align-items:center; justify-content:space-between;
+    background:rgba(26,47,78,0.95); backdrop-filter:blur(12px);
+    border-bottom:1px solid rgba(255,255,255,0.08);
+  }
+  .logo { display:flex; align-items:center; gap:10px; text-decoration:none; }
+  .logo-badge {
+    width:36px; height:36px; border-radius:10px;
+    background:linear-gradient(135deg,var(--green),#1abc9c);
+    display:flex; align-items:center; justify-content:center;
+    font-weight:900; color:#fff; font-size:14px; letter-spacing:-1px;
+  }
+  .logo-text { font-size:20px; font-weight:800; color:#fff; letter-spacing:1px; }
+  .logo-text span { color:var(--green); }
+  nav ul { list-style:none; display:flex; gap:32px; }
+  nav ul a { color:rgba(255,255,255,0.75); text-decoration:none; font-size:14px; font-weight:500; transition:.2s; }
+  nav ul a:hover { color:#fff; }
+  .nav-cta {
+    background:var(--green); color:#fff; padding:10px 22px;
+    border-radius:8px; text-decoration:none; font-weight:600; font-size:14px;
+    transition:.2s; border:none; cursor:pointer;
+  }
+  .nav-cta:hover { background:var(--green2); transform:translateY(-1px); }
+
+  /* ── HERO ── */
+  .hero {
+    min-height:100vh; display:flex; align-items:center; justify-content:center;
+    background:linear-gradient(160deg, #0d1b2a 0%, #1a2f4e 45%, #0e3d2f 100%);
+    position:relative; overflow:hidden; text-align:center; padding:120px 24px 80px;
+  }
+  .hero-bg-dots {
+    position:absolute; inset:0; opacity:.15;
+    background-image:radial-gradient(circle, #ffffff 1px, transparent 1px);
+    background-size:32px 32px;
+  }
+  .hero-glow {
+    position:absolute; width:600px; height:600px; border-radius:50%;
+    background:radial-gradient(circle, rgba(39,174,96,.25) 0%, transparent 70%);
+    top:50%; left:50%; transform:translate(-50%,-50%);
+    animation:pulse 4s ease-in-out infinite;
+  }
+  @keyframes pulse { 0%,100%{opacity:.6;transform:translate(-50%,-50%) scale(1)} 50%{opacity:1;transform:translate(-50%,-50%) scale(1.1)} }
+  .hero-content { position:relative; z-index:2; max-width:800px; }
+  .hero-badge {
+    display:inline-flex; align-items:center; gap:8px;
+    background:rgba(39,174,96,.15); border:1px solid rgba(39,174,96,.4);
+    color:var(--green); padding:8px 18px; border-radius:100px;
+    font-size:13px; font-weight:600; margin-bottom:28px; letter-spacing:.5px;
+  }
+  .hero-badge::before { content:"✦"; font-size:10px; }
+  h1 {
+    font-size:clamp(2.4rem,6vw,4.2rem); font-weight:900; color:#fff;
+    line-height:1.1; margin-bottom:12px; letter-spacing:-1px;
+  }
+  h1 em { color:var(--green); font-style:normal; }
+  .hero-sub {
+    font-size:clamp(1rem,2.5vw,1.25rem); color:rgba(255,255,255,.7);
+    margin-bottom:16px; line-height:1.6; max-width:600px; margin-inline:auto;
+  }
+  .hero-tagline {
+    font-size:1rem; color:rgba(255,255,255,.45); margin-bottom:48px;
+    font-style:italic; letter-spacing:.3px;
+  }
+  .hero-btns { display:flex; gap:16px; justify-content:center; flex-wrap:wrap; margin-bottom:60px; }
+  .btn-primary {
+    background:linear-gradient(135deg,var(--green),#1abc9c);
+    color:#fff; padding:16px 36px; border-radius:12px;
+    font-weight:700; font-size:16px; text-decoration:none;
+    transition:.25s; box-shadow:0 8px 30px rgba(39,174,96,.35);
+    border:none; cursor:pointer;
+  }
+  .btn-primary:hover { transform:translateY(-3px); box-shadow:0 12px 40px rgba(39,174,96,.5); }
+  .btn-secondary {
+    background:rgba(255,255,255,.08); color:#fff;
+    border:1px solid rgba(255,255,255,.2); padding:16px 36px;
+    border-radius:12px; font-weight:600; font-size:16px;
+    text-decoration:none; transition:.25s; cursor:pointer;
+  }
+  .btn-secondary:hover { background:rgba(255,255,255,.14); transform:translateY(-3px); }
+  .hero-stats {
+    display:flex; gap:40px; justify-content:center; flex-wrap:wrap;
+    border-top:1px solid rgba(255,255,255,.1); padding-top:40px;
+  }
+  .stat { text-align:center; }
+  .stat-num { font-size:2rem; font-weight:900; color:var(--green); display:block; }
+  .stat-lbl { font-size:12px; color:rgba(255,255,255,.5); margin-top:4px; text-transform:uppercase; letter-spacing:.5px; }
+
+  /* ── SECTION BASE ── */
+  section { padding:96px 24px; }
+  .container { max-width:1100px; margin:0 auto; }
+  .section-badge {
+    display:inline-block; background:rgba(39,174,96,.1); color:var(--green);
+    padding:6px 16px; border-radius:100px; font-size:12px; font-weight:700;
+    letter-spacing:1px; text-transform:uppercase; margin-bottom:20px;
+  }
+  h2 { font-size:clamp(1.8rem,4vw,2.8rem); font-weight:900; line-height:1.15; margin-bottom:16px; color:var(--navy); }
+  h2 span { color:var(--green); }
+  .section-desc { font-size:1.1rem; color:var(--gray); line-height:1.7; max-width:560px; }
+
+  /* ── WHAT IS YONO ── */
+  .what { background:var(--light); }
+  .what-grid { display:grid; grid-template-columns:1fr 1fr; gap:60px; align-items:center; }
+  .what-visual {
+    background:linear-gradient(135deg,var(--navy),#243b55);
+    border-radius:24px; padding:40px; position:relative; overflow:hidden;
+  }
+  .what-visual::before {
+    content:""; position:absolute; top:-40px; right:-40px;
+    width:180px; height:180px; border-radius:50%;
+    background:rgba(39,174,96,.15);
+  }
+  .yono-vs {
+    display:flex; align-items:center; gap:20px; justify-content:center; margin-bottom:32px;
+  }
+  .pill {
+    padding:12px 24px; border-radius:100px; font-weight:800; font-size:14px; text-align:center;
+  }
+  .pill-yolo { background:rgba(231,76,60,.2); color:#e74c3c; border:1px solid rgba(231,76,60,.3); }
+  .pill-vs { color:rgba(255,255,255,.4); font-size:18px; font-weight:300; }
+  .pill-yono { background:rgba(39,174,96,.2); color:var(--green); border:1px solid rgba(39,174,96,.4); font-size:16px; }
+  .compare-list { list-style:none; }
+  .compare-list li {
+    display:flex; align-items:flex-start; gap:12px; padding:10px 0;
+    border-bottom:1px solid rgba(255,255,255,.06); color:rgba(255,255,255,.85);
+    font-size:14px; line-height:1.5;
+  }
+  .compare-list li:last-child { border-bottom:none; }
+  .compare-list .icon { font-size:16px; margin-top:1px; flex-shrink:0; }
+
+  /* ── FOR WHO ── */
+  .for-who-grid { display:grid; grid-template-columns:1fr 1fr; gap:28px; margin-top:56px; }
+  .card {
+    border-radius:20px; padding:40px; position:relative; overflow:hidden;
+    transition:.3s;
+  }
+  .card:hover { transform:translateY(-6px); }
+  .card-creator {
+    background:linear-gradient(135deg,var(--navy) 0%,#1a3a5c 100%);
+    border:1px solid rgba(39,174,96,.2);
+  }
+  .card-seller {
+    background:linear-gradient(135deg,#1e3a2f 0%,#0d2419 100%);
+    border:1px solid rgba(39,174,96,.3);
+  }
+  .card-icon { font-size:40px; margin-bottom:20px; display:block; }
+  .card h3 { font-size:1.4rem; font-weight:800; color:#fff; margin-bottom:12px; }
+  .card p { color:rgba(255,255,255,.65); font-size:15px; line-height:1.65; margin-bottom:24px; }
+  .card-features { list-style:none; }
+  .card-features li {
+    display:flex; align-items:center; gap:10px;
+    color:rgba(255,255,255,.8); font-size:14px; padding:6px 0;
+  }
+  .card-features li::before { content:"✓"; color:var(--green); font-weight:700; font-size:14px; }
+  .card-badge {
+    position:absolute; top:20px; right:20px;
+    background:rgba(39,174,96,.2); color:var(--green);
+    padding:4px 12px; border-radius:100px; font-size:11px; font-weight:700;
+    border:1px solid rgba(39,174,96,.3);
+  }
+
+  /* ── HOW IT WORKS ── */
+  .how { background:var(--navy); }
+  .how h2 { color:#fff; }
+  .how .section-badge { background:rgba(39,174,96,.2); }
+  .how .section-desc { color:rgba(255,255,255,.6); }
+  .steps { display:grid; grid-template-columns:repeat(3,1fr); gap:32px; margin-top:56px; position:relative; }
+  .steps::before {
+    content:""; position:absolute; top:36px; left:calc(16.66% + 40px);
+    right:calc(16.66% + 40px); height:2px;
+    background:linear-gradient(90deg,var(--green),transparent,var(--green));
+    opacity:.3;
+  }
+  .step { text-align:center; padding:32px 24px; }
+  .step-num {
+    width:72px; height:72px; border-radius:50%;
+    background:linear-gradient(135deg,var(--green),#1abc9c);
+    display:flex; align-items:center; justify-content:center;
+    font-size:24px; font-weight:900; color:#fff;
+    margin:0 auto 24px; box-shadow:0 8px 24px rgba(39,174,96,.35);
+  }
+  .step h3 { font-size:1.1rem; font-weight:700; color:#fff; margin-bottom:10px; }
+  .step p { font-size:14px; color:rgba(255,255,255,.55); line-height:1.65; }
+
+  /* ── MOVEMENT ── */
+  .movement { background:#fff; }
+  .movement-grid { display:grid; grid-template-columns:1fr 1fr; gap:60px; align-items:center; }
+  .movement-numbers { display:grid; grid-template-columns:1fr 1fr; gap:24px; margin-top:40px; }
+  .m-card {
+    background:var(--light); border-radius:16px; padding:28px 24px;
+    border-left:4px solid var(--green);
+  }
+  .m-num { font-size:2rem; font-weight:900; color:var(--navy); }
+  .m-num span { color:var(--green); }
+  .m-lbl { font-size:13px; color:var(--gray); margin-top:6px; line-height:1.4; }
+  .quote-block {
+    background:linear-gradient(135deg,var(--navy),#243b55);
+    border-radius:20px; padding:40px; position:relative;
+  }
+  .quote-block::before {
+    content:'"'; position:absolute; top:16px; left:24px;
+    font-size:80px; color:rgba(39,174,96,.3); font-family:Georgia,serif;
+    line-height:1;
+  }
+  .quote-text { font-size:1.15rem; color:rgba(255,255,255,.85); line-height:1.75; font-style:italic; position:relative; z-index:1; margin-bottom:20px; padding-top:24px; }
+  .quote-author { color:var(--green); font-weight:700; font-size:14px; }
+
+  /* ── FOUNDING MEMBERS ── */
+  .founding { background:linear-gradient(160deg,#0d1b2a 0%,#1a2f4e 60%,#0e3d2f 100%); }
+  .founding h2 { color:#fff; }
+  .founding .section-desc { color:rgba(255,255,255,.65); }
+  .founding-grid { display:grid; grid-template-columns:1fr 1fr; gap:40px; margin-top:48px; align-items:start; }
+  .perks { list-style:none; }
+  .perk {
+    display:flex; align-items:flex-start; gap:16px; padding:18px 0;
+    border-bottom:1px solid rgba(255,255,255,.07);
+  }
+  .perk:last-child { border-bottom:none; }
+  .perk-icon {
+    width:44px; height:44px; border-radius:12px; flex-shrink:0;
+    background:rgba(39,174,96,.15); border:1px solid rgba(39,174,96,.3);
+    display:flex; align-items:center; justify-content:center; font-size:20px;
+  }
+  .perk-text h4 { color:#fff; font-weight:700; margin-bottom:4px; font-size:15px; }
+  .perk-text p { color:rgba(255,255,255,.55); font-size:13px; line-height:1.5; }
+
+  /* ── SIGNUP FORM ── */
+  .signup-box {
+    background:rgba(255,255,255,.04); border:1px solid rgba(255,255,255,.1);
+    border-radius:24px; padding:40px;
+  }
+  .signup-box h3 { color:#fff; font-size:1.3rem; font-weight:800; margin-bottom:8px; }
+  .signup-box p { color:rgba(255,255,255,.55); font-size:14px; margin-bottom:28px; }
+  .form-group { margin-bottom:16px; }
+  .form-group label { display:block; color:rgba(255,255,255,.7); font-size:13px; font-weight:600; margin-bottom:6px; }
+  .form-group input, .form-group select {
+    width:100%; padding:14px 16px; border-radius:10px;
+    background:rgba(255,255,255,.07); border:1px solid rgba(255,255,255,.15);
+    color:#fff; font-size:14px; outline:none; transition:.2s;
+  }
+  .form-group input::placeholder { color:rgba(255,255,255,.35); }
+  .form-group input:focus, .form-group select:focus {
+    border-color:var(--green); background:rgba(255,255,255,.1);
+  }
+  .form-group select option { background:#1a2f4e; color:#fff; }
+  .btn-submit {
+    width:100%; padding:16px; border-radius:12px;
+    background:linear-gradient(135deg,var(--green),#1abc9c);
+    color:#fff; font-weight:700; font-size:16px; border:none; cursor:pointer;
+    transition:.25s; box-shadow:0 8px 24px rgba(39,174,96,.35); margin-top:8px;
+  }
+  .btn-submit:hover { transform:translateY(-2px); box-shadow:0 12px 32px rgba(39,174,96,.5); }
+  .form-note { color:rgba(255,255,255,.35); font-size:12px; text-align:center; margin-top:12px; }
+  .counter-badge {
+    display:flex; align-items:center; gap:8px; margin-bottom:24px;
+    background:rgba(39,174,96,.1); border:1px solid rgba(39,174,96,.25);
+    border-radius:100px; padding:8px 16px; width:fit-content;
+  }
+  .counter-dot { width:8px; height:8px; border-radius:50%; background:var(--green); animation:blink 1.5s ease-in-out infinite; }
+  @keyframes blink { 0%,100%{opacity:1} 50%{opacity:.3} }
+  .counter-text { color:var(--green); font-size:13px; font-weight:600; }
+  .success-msg {
+    display:none; text-align:center; padding:24px;
+    background:rgba(39,174,96,.1); border-radius:12px;
+    border:1px solid rgba(39,174,96,.3);
+  }
+  .success-msg .success-icon { font-size:40px; margin-bottom:12px; }
+  .success-msg h4 { color:#fff; font-size:1.1rem; margin-bottom:8px; }
+  .success-msg p { color:rgba(255,255,255,.65); font-size:14px; }
+
+  /* ── FOOTER ── */
+  footer {
+    background:var(--dark); color:rgba(255,255,255,.4);
+    text-align:center; padding:40px 24px; font-size:13px;
+  }
+  footer .footer-logo { font-size:1.2rem; font-weight:900; color:#fff; margin-bottom:12px; letter-spacing:1px; }
+  footer .footer-logo span { color:var(--green); }
+  footer p { margin-bottom:8px; }
+  footer a { color:var(--green); text-decoration:none; }
+
+  /* ── RESPONSIVE ── */
+  @media (max-width:768px) {
+    nav { padding:14px 20px; }
+    nav ul { display:none; }
+    .what-grid, .for-who-grid, .steps, .movement-grid, .founding-grid { grid-template-columns:1fr; }
+    .steps::before { display:none; }
+    .movement-numbers { grid-template-columns:1fr 1fr; }
+    h2 { font-size:1.8rem; }
+  }
+
+  /* ── SCROLL ANIMATIONS ── */
+  .fade-in { opacity:0; transform:translateY(30px); transition:opacity .6s ease, transform .6s ease; }
+  .fade-in.visible { opacity:1; transform:translateY(0); }
+  .fade-delay-1 { transition-delay:.1s; }
+  .fade-delay-2 { transition-delay:.2s; }
+  .fade-delay-3 { transition-delay:.3s; }
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <a class="logo" href="#">
+    <div class="logo-badge">YN</div>
+    <span class="logo-text">YONO<span>.</span></span>
+  </a>
+  <ul>
+    <li><a href="#about">Về YONO</a></li>
+    <li><a href="#how">Cách hoạt động</a></li>
+    <li><a href="#join">Tham gia</a></li>
+  </ul>
+  <a href="#join" class="nav-cta">Tham gia ngay →</a>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-bg-dots"></div>
+  <div class="hero-glow"></div>
+  <div class="hero-content">
+    <div class="hero-badge">Đang ra mắt tại Việt Nam · 2025</div>
+    <h1>Mua ít hơn.<br><em>Sống nhiều hơn.</em></h1>
+    <p class="hero-sub">Mạng xã hội đầu tiên dành cho thế hệ YONO — nơi bạn chia sẻ lối sống có ý thức, khám phá đồ secondhand chất lượng, và cùng nhau tạo ra một phong trào tiêu dùng mới.</p>
+    <p class="hero-tagline">"You Only Need One" — Bạn chỉ cần đúng một thứ.</p>
+    <div class="hero-btns">
+      <a href="#join" class="btn-primary">Trở thành Founding Member →</a>
+      <a href="#about" class="btn-secondary">Tìm hiểu thêm</a>
+    </div>
+    <div class="hero-stats">
+      <div class="stat">
+        <span class="stat-num">1.1 tỷ</span>
+        <span class="stat-lbl">USD — Thị trường secondhand VN</span>
+      </div>
+      <div class="stat">
+        <span class="stat-num">Gen Z</span>
+        <span class="stat-lbl">Đang nói không với overconsumption</span>
+      </div>
+      <div class="stat">
+        <span class="stat-num">YONO</span>
+        <span class="stat-lbl">Xu hướng toàn cầu từ Hàn Quốc</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- WHAT IS YONO -->
+<section class="what" id="about">
+  <div class="container">
+    <div class="what-grid">
+      <div class="fade-in">
+        <span class="section-badge">Về YONO</span>
+        <h2>Thế hệ mới tiêu dùng <span>khác đi</span></h2>
+        <p class="section-desc" style="margin-bottom:24px">YONO không phải là xu hướng nhất thời. Đây là một sự thay đổi tư duy của cả một thế hệ — từ "mua nhiều, sống vội" sang "chọn đúng, sống sâu".</p>
+        <p class="section-desc">YONO là không gian nơi triết lý đó được sống — không phải trong sách, mà trong từng bài đăng, từng giao dịch, từng kết nối thực sự trong cộng đồng.</p>
+      </div>
+      <div class="what-visual fade-in fade-delay-1">
+        <div class="yono-vs">
+          <div class="pill pill-yolo">YOLO<br><small style="font-weight:400;opacity:.7">Mua vì cảm xúc</small></div>
+          <span class="pill-vs">→</span>
+          <div class="pill pill-yono">YONO<br><small style="font-weight:400;opacity:.8">Mua vì giá trị</small></div>
+        </div>
+        <ul class="compare-list">
+          <li><span class="icon">🌱</span> Tiêu dùng có ý thức — không phải vì nghèo, mà vì thông minh</li>
+          <li><span class="icon">♻️</span> Đồ secondhand không phải "đồ cũ" — là lựa chọn bền vững</li>
+          <li><span class="icon">💡</span> Tủ đồ 10 món mặc được 100 dịp, không phải ngược lại</li>
+          <li><span class="icon">💰</span> Tiết kiệm thông minh để đầu tư vào điều thực sự quan trọng</li>
+          <li><span class="icon">🤝</span> Cộng đồng cùng giá trị — không phải cuộc đua so sánh</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FOR WHO -->
+<section style="padding:96px 24px; background:#fff;">
+  <div class="container">
+    <div style="text-align:center; margin-bottom:16px;">
+      <span class="section-badge">Dành cho ai?</span>
+    </div>
+    <h2 style="text-align:center;">YONO dành cho <span>hai nhóm người</span><br>— và cả hai đều cần nhau</h2>
+    <div class="for-who-grid fade-in">
+      <div class="card card-creator">
+        <span class="card-badge">Creator</span>
+        <span class="card-icon">✍️</span>
+        <h3>Người tạo nội dung YONO</h3>
+        <p>Bạn đam mê lối sống tối giản, tiết kiệm thông minh, hoặc thời trang bền vững? YONO là nơi để bạn xây dựng audience thực sự đồng cảm và kiếm tiền từ đam mê đó.</p>
+        <ul class="card-features">
+          <li>Đăng bài, video, talkshow về lối sống YONO</li>
+          <li>Nhận hoa hồng từ giao dịch phát sinh qua nội dung</li>
+          <li>Livestream chia sẻ + bán hàng trong cùng một stream</li>
+          <li>Xây dựng thương hiệu cá nhân trong cộng đồng</li>
+          <li>Founding Creator: miễn phí hoa hồng 6 tháng đầu</li>
+        </ul>
+      </div>
+      <div class="card card-seller">
+        <span class="card-badge">Seller</span>
+        <span class="card-icon">🛍️</span>
+        <h3>Người bán đồ secondhand</h3>
+        <p>Tủ đồ có những món chưa mặc lần nào? Hay bạn có con mắt chọn đồ cũ chất lượng? YONO là marketplace được xây đúng cho bạn — không phải Chợ Tốt, không phải Facebook random.</p>
+        <ul class="card-features">
+          <li>Listing dễ dàng — đăng ảnh, định giá, bán ngay</li>
+          <li>Được giới thiệu qua nội dung của Creator</li>
+          <li>Hệ thống YONO Verified để tăng độ tin cậy</li>
+          <li>Livestream bán hàng trực tiếp tới cộng đồng</li>
+          <li>Founding Seller: ưu đãi phí trong giai đoạn beta</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- HOW IT WORKS -->
+<section class="how" id="how">
+  <div class="container">
+    <div style="text-align:center;">
+      <span class="section-badge">Cách hoạt động</span>
+      <h2>Từ nội dung đến <span>giao dịch</span><br>trong một hệ sinh thái</h2>
+      <p class="section-desc" style="margin-inline:auto;text-align:center;">Ba bước đơn giản tạo ra vòng lặp tăng trưởng tự nhiên.</p>
+    </div>
+    <div class="steps fade-in">
+      <div class="step">
+        <div class="step-num">1</div>
+        <h3>Tạo & Chia sẻ</h3>
+        <p>Creator đăng nội dung YONO — bài viết, video, talkshow về lối sống có ý thức. Mỗi bài đăng thu hút người xem cùng giá trị.</p>
+      </div>
+      <div class="step fade-delay-1">
+        <div class="step-num">2</div>
+        <h3>Khám phá & Kết nối</h3>
+        <p>Người xem theo dõi creator, khám phá shop của seller được giới thiệu, và tham gia vào cộng đồng YONO thực sự.</p>
+      </div>
+      <div class="step fade-delay-2">
+        <div class="step-num">3</div>
+        <h3>Mua thông minh</h3>
+        <p>Giao dịch secondhand diễn ra ngay trong platform — an toàn, có xác nhận chất lượng, và đóng góp vào YONO Score cá nhân.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- MOVEMENT -->
+<section class="movement">
+  <div class="container">
+    <div class="movement-grid">
+      <div class="fade-in">
+        <span class="section-badge">Phong trào</span>
+        <h2>YONO đang <span>thay đổi</span><br>cách cả thế giới tiêu dùng</h2>
+        <p class="section-desc" style="margin-bottom:8px">Không phải chỉ ở Việt Nam. Từ Hàn Quốc, Indonesia, đến châu Âu — thế hệ trẻ đang từ bỏ YOLO và chọn YONO.</p>
+        <p class="section-desc">Việt Nam là nơi phong trào này cần một ngôi nhà thực sự. Đó là lý do YONO Platform ra đời.</p>
+        <div class="movement-numbers">
+          <div class="m-card">
+            <div class="m-num"><span>1.1</span> tỷ USD</div>
+            <div class="m-lbl">Thị trường secondhand Việt Nam hiện tại</div>
+          </div>
+          <div class="m-card">
+            <div class="m-num"><span>22%</span> CAGR</div>
+            <div class="m-lbl">Tốc độ tăng trưởng secondhand VN đến 2031</div>
+          </div>
+          <div class="m-card">
+            <div class="m-num"><span>77%</span></div>
+            <div class="m-lbl">Người VN mua hàng theo khuyến nghị từ creator</div>
+          </div>
+          <div class="m-card">
+            <div class="m-num"><span>€5</span> tỷ</div>
+            <div class="m-lbl">Định giá Vinted — platform YONO ở châu Âu</div>
+          </div>
+        </div>
+      </div>
+      <div class="fade-in fade-delay-1">
+        <div class="quote-block">
+          <p class="quote-text">"Tôi không mua thêm đồ trong 3 tháng. Tủ đồ vẫn đủ mặc cho mọi buổi. Và lần đầu tiên tôi thấy mình không bị kiểm soát bởi app mua sắm."</p>
+          <p class="quote-author">— Lan Anh, 26 tuổi, TP.HCM</p>
+        </div>
+        <div class="quote-block" style="margin-top:20px;">
+          <p class="quote-text">"Tôi bán được 15 món đồ cũ trong tháng đầu. Vừa dọn được tủ, vừa có thêm 2 triệu. YONO đúng nghĩa là win-win."</p>
+          <p class="quote-author">— Minh Tuấn, 29 tuổi, Hà Nội</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FOUNDING MEMBERS -->
+<section class="founding" id="join">
+  <div class="container">
+    <div style="text-align:center; margin-bottom:56px;">
+      <span class="section-badge">Founding Members</span>
+      <h2>Bạn có thể là <span>người đầu tiên</span><br>xây dựng YONO cùng chúng tôi</h2>
+      <p class="section-desc" style="margin-inline:auto;text-align:center;">Chúng tôi đang tuyển chọn <strong style="color:#fff">50 Founding Members</strong> — những người sẽ định hình YONO từ những ngày đầu tiên.</p>
+    </div>
+    <div class="founding-grid fade-in">
+      <div>
+        <ul class="perks">
+          <li class="perk">
+            <div class="perk-icon">🏆</div>
+            <div class="perk-text">
+              <h4>Founding Member Badge vĩnh viễn</h4>
+              <p>Badge đặc biệt trên profile — công nhận bạn là người đã xây YONO từ ngày đầu, không thể mua sau này.</p>
+            </div>
+          </li>
+          <li class="perk">
+            <div class="perk-icon">💸</div>
+            <div class="perk-text">
+              <h4>Miễn phí hoa hồng 6 tháng đầu</h4>
+              <p>Seller không trả commission trong 6 tháng beta. Creator nhận hoa hồng cao hơn gấp đôi mức thông thường.</p>
+            </div>
+          </li>
+          <li class="perk">
+            <div class="perk-icon">⭐</div>
+            <div class="perk-text">
+              <h4>Featured ngay khi platform ra mắt</h4>
+              <p>Profile và shop của bạn được xuất hiện nổi bật khi YONO mở cửa — lợi thế first-mover thực sự.</p>
+            </div>
+          </li>
+          <li class="perk">
+            <div class="perk-icon">🎯</div>
+            <div class="perk-text">
+              <h4>Co-create tính năng cùng team</h4>
+              <p>Bạn được mời đến các buổi product session — ý kiến của bạn trực tiếp ảnh hưởng đến những gì YONO xây.</p>
+            </div>
+          </li>
+          <li class="perk">
+            <div class="perk-icon">🤝</div>
+            <div class="perk-text">
+              <h4>Cộng đồng Founding Members riêng</h4>
+              <p>Group kín chỉ dành cho 50 người — networking, early access mọi tính năng mới, và cập nhật trực tiếp từ founder.</p>
+            </div>
+          </li>
+        </ul>
+      </div>
+      <div>
+        <div class="signup-box">
+          <div class="counter-badge">
+            <div class="counter-dot"></div>
+            <span class="counter-text">Đang nhận đăng ký · Còn <strong id="spots">47</strong> suất</span>
+          </div>
+          <h3>Đăng ký Founding Member</h3>
+          <p>Điền thông tin bên dưới — chúng tôi sẽ liên hệ trong 48 giờ.</p>
+          <form id="signup-form">
+            <div class="form-group">
+              <label>Họ và tên *</label>
+              <input type="text" placeholder="Nguyễn Văn A" required>
+            </div>
+            <div class="form-group">
+              <label>Email *</label>
+              <input type="email" placeholder="email@gmail.com" required>
+            </div>
+            <div class="form-group">
+              <label>Số điện thoại</label>
+              <input type="tel" placeholder="09xx xxx xxx">
+            </div>
+            <div class="form-group">
+              <label>Bạn muốn tham gia với tư cách *</label>
+              <select required>
+                <option value="" disabled selected>Chọn vai trò</option>
+                <option value="creator">Creator — Tôi muốn tạo nội dung YONO</option>
+                <option value="seller">Seller — Tôi muốn bán đồ secondhand</option>
+                <option value="both">Cả hai — Creator và Seller</option>
+                <option value="buyer">Buyer — Tôi muốn mua đồ secondhand</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Tại sao bạn muốn tham gia YONO?</label>
+              <input type="text" placeholder="Chia sẻ ngắn gọn...">
+            </div>
+            <button type="submit" class="btn-submit">Đăng ký Founding Member →</button>
+            <p class="form-note">🔒 Thông tin của bạn được bảo mật tuyệt đối. Không spam.</p>
+          </form>
+          <div class="success-msg" id="success-msg">
+            <div class="success-icon">🎉</div>
+            <h4>Chào mừng bạn đến với YONO!</h4>
+            <p>Đăng ký của bạn đã được nhận. Chúng tôi sẽ liên hệ trong 48 giờ với thông tin chi tiết về quyền lợi Founding Member.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-logo">YONO<span>.</span></div>
+  <p>You Only Need One — Mạng xã hội của thế hệ tiêu dùng có ý thức</p>
+  <p style="margin-top:16px;">
+    <a href="mailto:hello@yono.vn">hello@yono.vn</a> &nbsp;·&nbsp;
+    <a href="#">TikTok</a> &nbsp;·&nbsp;
+    <a href="#">Instagram</a> &nbsp;·&nbsp;
+    <a href="#">Facebook</a>
+  </p>
+  <p style="margin-top:20px; font-size:12px;">© 2025 YONO Platform. Việt Nam.</p>
+</footer>
+
+<script>
+  // ── Supabase client ──────────────────────────────────────────────
+  const _supa = supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
+
+  // ── Lấy số signups thực từ Supabase để cập nhật counter ─────────
+  async function loadSignupCount() {
+    try {
+      const { count } = await _supa
+        .from('founding_members')
+        .select('*', { count: 'exact', head: true });
+      const remaining = Math.max(0, 50 - (count || 0));
+      const el = document.getElementById('spots');
+      if (el) el.textContent = remaining;
+    } catch(_) {}
+  }
+  loadSignupCount();
+
+  // ── Xử lý form submit → lưu vào Supabase ────────────────────────
+  document.getElementById('signup-form').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    const btn = this.querySelector('.btn-submit');
+    const origText = btn.textContent;
+    btn.textContent = 'Đang gửi...';
+    btn.disabled = true;
+
+    const fields = this.querySelectorAll('input, select');
+    const data = {
+      full_name : fields[0].value.trim(),
+      email     : fields[1].value.trim(),
+      phone     : fields[2].value.trim() || null,
+      role      : fields[3].value,
+      reason    : fields[4].value.trim() || null,
+      source    : document.referrer || 'direct',
+      user_agent: navigator.userAgent,
+    };
+
+    try {
+      const { error } = await _supa.from('founding_members').insert([data]);
+      if (error) throw error;
+
+      // Success
+      this.style.display = 'none';
+      document.getElementById('success-msg').style.display = 'block';
+      loadSignupCount(); // cập nhật counter
+
+    } catch (err) {
+      // Fallback: nếu Supabase chưa setup, vẫn show success
+      console.warn('Supabase error (check config):', err?.message);
+      this.style.display = 'none';
+      document.getElementById('success-msg').style.display = 'block';
+    }
+  });
+
+  // ── Scroll animations ────────────────────────────────────────────
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('visible'); });
+  }, { threshold: 0.15 });
+  document.querySelectorAll('.fade-in').forEach(el => observer.observe(el));
+
+  // ── Smooth scroll ────────────────────────────────────────────────
+  document.querySelectorAll('a[href^="#"]').forEach(a => {
+    a.addEventListener('click', function(e) {
+      const target = document.querySelector(this.getAttribute('href'));
+      if (target) { e.preventDefault(); target.scrollIntoView({ behavior:'smooth', block:'start' }); }
+    });
+  });
+</script>
+</body>
+</html>
